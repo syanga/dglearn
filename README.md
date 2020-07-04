@@ -1,5 +1,5 @@
 # dglearn
-Python implementation of "Characterizing Distribution Equivalence and Structure Learning forCyclic and Acyclic Directed Graphs," in ICML 2020
+Python implementation of "Characterizing Distribution Equivalence and Structure Learning for Cyclic and Acyclic Directed Graphs," in ICML 2020
 
 Link to paper: https://arxiv.org/abs/1910.12993
 
