@@ -1,44 +1,9 @@
-# dglearn
-Python implementation of "Characterizing Distribution Equivalence and Structure Learning forCyclic and Acyclic Directed Graphs," in ICML 2020
+""" Example of learning a DG structure """
+import numpy as np
 
-Link to paper: https://arxiv.org/abs/1910.12993
-
-# Example Usage
-
-## 1. Enumerate the equivalence class of a directed graph (up to reductions)
-```python
-from dglearn import *
-
-# specify directed graph: construct AdjacencyStucture
-n_vars = 4
-edges = [(0, 2), (2, 1), (1, 3), (3, 0), (3, 2)]
-var_names = {i:"$X_%d$"%(i+1) for i in range(n_vars)} 
-dg_structure = AdjacencyStucture(n_vars, edge_list=edges)
-
-# plot structure
-plot_structure(edges, n_vars, save_path="../assets/dg4.png", figsize=(2.5, 2.5), name_list=var_names, latex=True,
-               node_size=800, font_size=16, width=2.5, connectionstyle='arc3,rad=0.15', node_color='skyblue')
-```
-<img src="assets/dg4.png" width="200">
-
-```python
-# enumerate its equivalence class, up to column permutation (not including reducible graphs)
-search = GraphEquivalenceSearch(dg_structure)
-search.search_dfs()
-
-# enumerate full equivalence class (not including reducible graphs)
-# generally only feasible for relatively small directed graphs
-search.expand_column_permutations()
-equiv_class = [binary2array(bstr) for bstr in search.visited_graphs]
-
-# plot elements of equivalence class
-plot_collection({"Graph %d"%(i+1):array2edges(g) for i,g in enumerate(equiv_class)}, 4, n_cols=4, save_path="../assets/dg4_enumerated.png",
-                name_list=var_names, latex=True, node_size=600, font_size=14, width=2, connectionstyle='arc3,rad=0.15', node_color='skyblue')
-```
-<img src="assets/dg4_enumerated.png" width="800">
-
-## 2. Learn a directed graph structure from data
-```python
+# import higher level package
+import sys
+sys.path.append("..")
 from dglearn import *
 
 # example graph structure with 6 variables
@@ -84,5 +49,3 @@ print("SHD to nearest member of equivalence class: %d" % shd)
 precision_matrix = precision_matrix(B_sampled, s_sampled)
 kld_best, Q_best = minimize_kld(precision_matrix, learned_support)
 print("min. KLD metric: %0.3f"%kld_best)
-```
-<img src="assets/dg6_learning_result.png" width="800">
