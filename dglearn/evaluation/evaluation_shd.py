@@ -42,86 +42,86 @@ def min_shd(support_set, support):
     return np.min([shd(support, support_i) for support_i in support_set])
 
 
-#####################################################################
-# compute shd between two supports, a support with a set of supports
-#####################################################################
-def min_perm_shd(supp_set, supp):
-    return min([match_colperm_shd(el, supp) for el in supp_set])
+# #####################################################################
+# # compute shd between two supports, a support with a set of supports
+# #####################################################################
+# def min_perm_shd(supp_set, supp):
+#     return min([match_colperm_shd(el, supp) for el in supp_set])
 
 
-def match_colperm_shd(supp1, supp2):
-    """
-        Find a column permutation of supp1 that minimizes
-        the shd between supp1 and supp2, and return
-        that minimum distance.
-    """
-    supp1 = supp1.copy()
-    supp2 = supp2.copy()
-    np.fill_diagonal(supp1, 1)
-    np.fill_diagonal(supp2, 1)
-    n_vars = supp1.shape[0]
+# def match_colperm_shd(supp1, supp2):
+#     """
+#         Find a column permutation of supp1 that minimizes
+#         the shd between supp1 and supp2, and return
+#         that minimum distance.
+#     """
+#     supp1 = supp1.copy()
+#     supp2 = supp2.copy()
+#     np.fill_diagonal(supp1, 1)
+#     np.fill_diagonal(supp2, 1)
+#     n_vars = supp1.shape[0]
 
-    # find sccs
-    scc_list = gm_scc(supp1)
+#     # find sccs
+#     scc_list = gm_scc(supp1)
 
-    # find assignments
-    assignments = -np.ones(n_vars)
-    for scc in scc_list:
-        # print (scc)
+#     # find assignments
+#     assignments = -np.ones(n_vars)
+#     for scc in scc_list:
+#         # print (scc)
 
-        if len(scc) == 1:
-            # single-variable component - immediately assign
-            assignments[scc[0]] = scc[0]
+#         if len(scc) == 1:
+#             # single-variable component - immediately assign
+#             assignments[scc[0]] = scc[0]
 
-        else:
-            # larger scc - consider all cycle reversions
-            local_supp1 = supp1[:, scc][scc, :]
-            local_supp2 = supp2[:, scc][scc, :]
-            np.fill_diagonal(local_supp1, 0)
-            np.fill_diagonal(local_supp2, 0)
+#         else:
+#             # larger scc - consider all cycle reversions
+#             local_supp1 = supp1[:, scc][scc, :]
+#             local_supp2 = supp2[:, scc][scc, :]
+#             np.fill_diagonal(local_supp1, 0)
+#             np.fill_diagonal(local_supp2, 0)
 
-            def find_cycle(support, blacklist=None):
-                if blacklist is None:
-                    blacklist = []
-                for i in range(support.shape[0]):
-                    cycle = gm_find_path(i, i, support, blacklist)
-                    if cycle is not None:
-                        return cycle
-                return None
+#             def find_cycle(support, blacklist=None):
+#                 if blacklist is None:
+#                     blacklist = []
+#                 for i in range(support.shape[0]):
+#                     cycle = gm_find_path(i, i, support, blacklist)
+#                     if cycle is not None:
+#                         return cycle
+#                 return None
 
-            # keep track of best permutation
-            best_distance = shd(local_supp1, local_supp2)
-            best_assignment = np.arange(local_supp1.shape[0])
+#             # keep track of best permutation
+#             best_distance = shd(local_supp1, local_supp2)
+#             best_assignment = np.arange(local_supp1.shape[0])
 
-            # perform cycle reversions
-            found_cycles = []
-            cycle = find_cycle(local_supp1, blacklist=found_cycles)
-            while cycle is not None:
-                # print ("\t", [scc[c] for c in cycle])
+#             # perform cycle reversions
+#             found_cycles = []
+#             cycle = find_cycle(local_supp1, blacklist=found_cycles)
+#             while cycle is not None:
+#                 # print ("\t", [scc[c] for c in cycle])
 
-                # perform cycle reversion and compute distance
-                reverse_assignment = np.arange(local_supp1.shape[0])
-                for c in reversed(range(len(cycle)-1)):
-                    reverse_assignment[cycle[c]] = cycle[c+1]
-                reverse_distance = shd(local_supp1[:, reverse_assignment], local_supp2)
+#                 # perform cycle reversion and compute distance
+#                 reverse_assignment = np.arange(local_supp1.shape[0])
+#                 for c in reversed(range(len(cycle)-1)):
+#                     reverse_assignment[cycle[c]] = cycle[c+1]
+#                 reverse_distance = shd(local_supp1[:, reverse_assignment], local_supp2)
 
-                # reverse cycle improves distance
-                if reverse_distance < best_distance:
-                    best_distance = reverse_distance
-                    best_assignment = reverse_assignment.copy()
+#                 # reverse cycle improves distance
+#                 if reverse_distance < best_distance:
+#                     best_distance = reverse_distance
+#                     best_assignment = reverse_assignment.copy()
 
-                # add cycle to list of found cycles
-                for i in range(len(cycle)):
-                    found_cycles.append(tuple(np.roll(cycle, i)))
-                cycle = find_cycle(local_supp1, blacklist=found_cycles)
+#                 # add cycle to list of found cycles
+#                 for i in range(len(cycle)):
+#                     found_cycles.append(tuple(np.roll(cycle, i)))
+#                 cycle = find_cycle(local_supp1, blacklist=found_cycles)
 
-            # finalize assignment
-            assert np.isfinite(best_distance)
-            for i in range(len(scc)):
-                assignments[scc[i]] = scc[best_assignment[i]]
+#             # finalize assignment
+#             assert np.isfinite(best_distance)
+#             for i in range(len(scc)):
+#                 assignments[scc[i]] = scc[best_assignment[i]]
 
-    assert np.all(assignments >= 0)
-    return np.abs(supp1[:, assignments.astype(int)] - supp2).sum()
+#     assert np.all(assignments >= 0)
+#     return np.abs(supp1[:, assignments.astype(int)] - supp2).sum()
 
 
 def gm_scc(support):
