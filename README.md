@@ -85,4 +85,4 @@ precision_matrix = precision_matrix(B_sampled, s_sampled)
 kld_best, Q_best = minimize_kld(precision_matrix, learned_support)
 print("min. KLD metric: %0.3f"%kld_best)
 ```
-<img src="assets/dg6_learning_result.png" width="800">
+<img src="assets/dg6_learning_result.png" width="500">
