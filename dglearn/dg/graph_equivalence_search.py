@@ -7,12 +7,13 @@ from .adjacency_structure import AdjacencyStucture
 
 class GraphEquivalenceSearch:
     '''
-        Identify whether or not binary string candidate is in
-        the equivalence class of binary string target.
+        Identify whether or not AdjacencyStucture candidate is in
+        the equivalence class of AdjacencyStucture target.
+        If target is None, enumerate the equivalence class of candidate
 
         Look for a sequence of rotations that transforms the
         candidate into the target. If no sequence exists,
-        return the full equivalence class of the candidate. 
+        return the full equivalence class of the candidate.
         If target is None, enumerate the whole equivalence class.
 
         * Uses hamming distance as a heuristic to guide search
