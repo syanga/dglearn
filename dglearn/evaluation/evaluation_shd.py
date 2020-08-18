@@ -1,4 +1,6 @@
 import numpy as np
+from copy import deepcopy
+from dglearn import array2binary, reduce_support
 
 #
 # shd: compute shd between two supports
@@ -42,86 +44,106 @@ def min_shd(support_set, support):
     return np.min([shd(support, support_i) for support_i in support_set])
 
 
-# #####################################################################
-# # compute shd between two supports, a support with a set of supports
-# #####################################################################
-# def min_perm_shd(supp_set, supp):
-#     return min([match_colperm_shd(el, supp) for el in supp_set])
+#####################################################################
+# compute shd between two supports, a support with a set of supports
+#####################################################################
+def min_colperm_shd(supp_set, support):
+    return min([match_colperm_shd(supp, support) for supp in supp_set])
 
 
-# def match_colperm_shd(supp1, supp2):
-#     """
-#         Find a column permutation of supp1 that minimizes
-#         the shd between supp1 and supp2, and return
-#         that minimum distance.
-#     """
-#     supp1 = supp1.copy()
-#     supp2 = supp2.copy()
-#     np.fill_diagonal(supp1, 1)
-#     np.fill_diagonal(supp2, 1)
-#     n_vars = supp1.shape[0]
+def match_colperm_shd(supp1, supp2):
+    """
+        Find a column permutation of supp1 that minimizes
+        the shd between supp1 and supp2, and return
+        that minimum distance.
 
-#     # find sccs
-#     scc_list = gm_scc(supp1)
+        works with support of Q matrix, i.e. with ones on diagonal
+    """
+    supp1 = reduce_support(supp1, fill_diagonal=True)
+    supp2 = reduce_support(supp2, fill_diagonal=True)
 
-#     # find assignments
-#     assignments = -np.ones(n_vars)
-#     for scc in scc_list:
-#         # print (scc)
+    # find cycle in graph
+    def find_cycle(support, blacklist=None):
+        np.fill_diagonal(support, 0)
+        if blacklist is None:
+            blacklist = []
+        for i in range(support.shape[0]):
+            cycle = gm_find_path(i, i, support, blacklist)
+            if cycle is not None:
+                if len(cycle) > 1:
+                    return cycle
+        return None
 
-#         if len(scc) == 1:
-#             # single-variable component - immediately assign
-#             assignments[scc[0]] = scc[0]
+    # keep track of smallest shd
+    best_shd = shd(supp1, supp2)
+    
+    # print ("initial shd", best_shd)
+    # print ("initial support:")
+    # print (supp1)
+    # print ("Initial support 2:")
+    # print (supp2)
 
-#         else:
-#             # larger scc - consider all cycle reversions
-#             local_supp1 = supp1[:, scc][scc, :]
-#             local_supp2 = supp2[:, scc][scc, :]
-#             np.fill_diagonal(local_supp1, 0)
-#             np.fill_diagonal(local_supp2, 0)
+    # keep track of visited graphs in binary representation
+    visited_graphs = set()
 
-#             def find_cycle(support, blacklist=None):
-#                 if blacklist is None:
-#                     blacklist = []
-#                 for i in range(support.shape[0]):
-#                     cycle = gm_find_path(i, i, support, blacklist)
-#                     if cycle is not None:
-#                         return cycle
-#                 return None
+    # stack entries: (variable assignment, cycles that have already been reversed)
+    operation_stack = []
+    operation_stack.append((np.arange(supp1.shape[0]), set()))
+    while len(operation_stack) > 0:
+        assignment, visited = operation_stack[-1]
+        supp = supp1[:, assignment]
 
-#             # keep track of best permutation
-#             best_distance = shd(local_supp1, local_supp2)
-#             best_assignment = np.arange(local_supp1.shape[0])
+        # check if this graph has been visited already
+        if array2binary(supp) in visited_graphs:
+            operation_stack.pop()
+            continue
+        else:
+            visited_graphs.add(array2binary(supp))
 
-#             # perform cycle reversions
-#             found_cycles = []
-#             cycle = find_cycle(local_supp1, blacklist=found_cycles)
-#             while cycle is not None:
-#                 # print ("\t", [scc[c] for c in cycle])
+        # look for a new cycle
+        cycle = find_cycle(supp, blacklist=visited)
+        # print ("assignment", assignment)
 
-#                 # perform cycle reversion and compute distance
-#                 reverse_assignment = np.arange(local_supp1.shape[0])
-#                 for c in reversed(range(len(cycle)-1)):
-#                     reverse_assignment[cycle[c]] = cycle[c+1]
-#                 reverse_distance = shd(local_supp1[:, reverse_assignment], local_supp2)
+        # we've tried every cycle reversal for this particular graph
+        if cycle is None:
+            operation_stack.pop()
+            continue
 
-#                 # reverse cycle improves distance
-#                 if reverse_distance < best_distance:
-#                     best_distance = reverse_distance
-#                     best_assignment = reverse_assignment.copy()
+        # update visited cycle set
+        for i in range(len(cycle)):
+            visited.add(tuple(np.roll(cycle, i)))
+        operation_stack[-1] = (assignment, visited)
 
-#                 # add cycle to list of found cycles
-#                 for i in range(len(cycle)):
-#                     found_cycles.append(tuple(np.roll(cycle, i)))
-#                 cycle = find_cycle(local_supp1, blacklist=found_cycles)
+        # perform cycle reversion
+        assignment_reversed = assignment.copy()
+        for i in range(len(cycle)):
+            curr_var = cycle[i]
+            next_var = cycle[i+1] if i < len(cycle)-1 else cycle[0]
+            new_idx = np.where(assignment == curr_var)[0][0]
+            assignment_reversed[new_idx] = next_var
 
-#             # finalize assignment
-#             assert np.isfinite(best_distance)
-#             for i in range(len(scc)):
-#                 assignments[scc[i]] = scc[best_assignment[i]]
+        supp_reversed = supp1[:, assignment_reversed]
 
-#     assert np.all(assignments >= 0)
-#     return np.abs(supp1[:, assignments.astype(int)] - supp2).sum()
+        # print ("----- new iteration -----")
+        # print ("current assignment:", assignment)
+        # print ("new, reversed assignment:", assignment_reversed)
+        # print ("cycle found:", cycle, "diagonal all one:", np.all(np.diagonal(supp_reversed)))
+        # print ("reversed support:")
+        # print (supp_reversed)
+
+        # make sure that support is valid - no zeros on diagonal
+        if np.all(np.diagonal(supp_reversed)):
+            reversed_shd = shd(supp_reversed, supp2)
+            # print ("reversed shd:", reversed_shd)
+
+            # check if this cycle reversion improves best shd
+            if reversed_shd < best_shd:
+                best_shd = reversed_shd
+
+            # push to stack
+            operation_stack.append((assignment_reversed, set()))
+
+    return best_shd
 
 
 def gm_scc(support):

@@ -40,9 +40,8 @@ plot_collection({'true': edges, 'learned': array2edges(learned_support)}, n_vars
 true_graph = AdjacencyStucture(n_vars, edge_list=edges)
 search = GraphEquivalenceSearch(true_graph)
 search.search_dfs()
-search.expand_column_permutations()
 equiv_class = [binary2array(bstr) for bstr in search.visited_graphs]
-shd = min_shd(equiv_class, learned_support)
+shd = min_colperm_shd(equiv_class, learned_support)
 print("SHD to nearest member of equivalence class: %d" % shd)
 
 # compute performance metric: min KLD
