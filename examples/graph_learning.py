@@ -34,7 +34,7 @@ learned_support = reduce_support(learned_support, fill_diagonal=False)
 
 # plot true and learned directed graphs
 plot_collection({'true': edges, 'learned': array2edges(learned_support)}, n_vars, name_list=var_names,
-                latex=True, n_cols=2, node_size=600, font_size=14, width=2, save_path="../assets/dg6_learning_result.png")
+                latex=False, n_cols=2, node_size=600, font_size=14, width=2, save_path="../assets/dg6_learning_result.png")
 
 # compute performance metric: SHD
 true_graph = AdjacencyStucture(n_vars, edge_list=edges)

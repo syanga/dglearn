@@ -4,7 +4,7 @@ import networkx as nx
 import numpy as np
 
 
-def plot_structure(edges, n_vars, save_path=None, figsize=(2,2), name_list=None, latex=True, 
+def plot_structure(edges, n_vars, save_path=None, figsize=(2,2), name_list=None, latex=False, 
     node_size=600, font_size=18, width=2.0, graphviz=False, node_color='skyblue', connectionstyle='arc3,rad=0.0'):
     # enable latex rendering
     if latex:
@@ -23,7 +23,7 @@ def plot_structure(edges, n_vars, save_path=None, figsize=(2,2), name_list=None,
 
     plt.figure(figsize=figsize)
     nx.draw(gr, pos=nx.nx_agraph.graphviz_layout(gr) if graphviz else nx.circular_layout(gr), 
-            labels=name_dict, node_size=node_size, font_size=font_size, width=width, node_color=node_color, edgecolors='k', edgewidths=4, connectionstyle=connectionstyle)
+            labels=name_dict, node_size=node_size, font_size=font_size, width=width, node_color=node_color, edgecolors='k', connectionstyle=connectionstyle)
 
     if save_path is not None:
         plt.savefig(save_path, format=save_path.split(".")[-1], dpi=1000)
@@ -71,7 +71,7 @@ def plot_collection(edge_dict, n_vars, n_rows=None, n_cols=None, cell_size=(3,3)
         plt.subplot(n_rows, n_cols, i+1)
         plt.title(key)
         nx.draw(gr, pos=nx.nx_agraph.graphviz_layout(gr) if graphviz else nx.circular_layout(gr), 
-                labels=name_dict, node_size=node_size, font_size=font_size, width=width, node_color=node_color, edgecolors='k', edgewidths=4, connectionstyle=connectionstyle)
+                labels=name_dict, node_size=node_size, font_size=font_size, width=width, node_color=node_color, edgecolors='k', connectionstyle=connectionstyle)
 
     if save_path is not None:
         plt.savefig(save_path, format=save_path.split(".")[-1], dpi=1000)

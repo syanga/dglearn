@@ -13,7 +13,7 @@ var_names = {i:"$X_%d$"%(i+1) for i in range(n_vars)}
 dg_structure = AdjacencyStucture(n_vars, edge_list=edges)
 
 # plot structure
-plot_structure(edges, n_vars, save_path="../assets/dg4.png", figsize=(2.5, 2.5), name_list=var_names, latex=True,
+plot_structure(edges, n_vars, save_path="../assets/dg4.png", figsize=(2.5, 2.5), name_list=var_names, latex=False,
                node_size=800, font_size=16, width=2.5, connectionstyle='arc3,rad=0.15', node_color='skyblue')
 
 
@@ -30,4 +30,4 @@ equiv_class = [binary2array(bstr) for bstr in search.visited_graphs]
 
 # plot elements of equivalence class
 plot_collection({"Graph %d"%(i+1):array2edges(g) for i,g in enumerate(equiv_class)}, 4, n_cols=4, save_path="../assets/dg4_enumerated.png",
-                name_list=var_names, latex=True, node_size=600, font_size=14, width=2, connectionstyle='arc3,rad=0.15', node_color='skyblue')
+                name_list=var_names, latex=False, node_size=600, font_size=14, width=2, connectionstyle='arc3,rad=0.15', node_color='skyblue')
